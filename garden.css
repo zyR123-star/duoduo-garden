@@ -139,7 +139,25 @@ main {
 }
 
 .garden-heading {
-  max-width: 760px;
+  display: grid;
+  grid-template-columns: minmax(0, 760px) minmax(180px, 280px);
+  align-items: end;
+  justify-content: space-between;
+  gap: clamp(24px, 6vw, 90px);
+}
+
+.garden-mascot {
+  width: min(25vw, 270px);
+  height: auto;
+  justify-self: end;
+  filter: drop-shadow(0 24px 28px rgba(55, 91, 70, 0.14));
+  animation: mascot-float 6s ease-in-out infinite;
+  transform-origin: 50% 70%;
+}
+
+@keyframes mascot-float {
+  0%, 100% { transform: translateY(0) rotate(-0.8deg); }
+  50% { transform: translateY(-7px) rotate(0.8deg); }
 }
 
 .eyebrow,
@@ -413,6 +431,16 @@ main {
 
   main {
     padding-top: 40px;
+  }
+
+  .garden-heading {
+    display: block;
+  }
+
+  .garden-mascot {
+    display: block;
+    width: 132px;
+    margin: 22px 4px 0 auto;
   }
 
   .garden-heading h1 {

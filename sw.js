@@ -1,5 +1,5 @@
 /* 修改页面或资源后同步提升 CACHE 版本。 */
-const CACHE = 'duoduo-garden-v1';
+const CACHE = 'duoduo-garden-v2';
 const ASSETS = [
   './',
   './index.html',
@@ -18,6 +18,7 @@ const ASSETS = [
   './src/skeleton.js',
   './manifest.webmanifest',
   './assets/icon.svg',
+  './assets/duoduo-garden-mascot.svg',
   './assets/icon-180.png',
   './assets/icon-192.png',
   './assets/icon-512.png',

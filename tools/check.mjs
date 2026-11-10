@@ -298,7 +298,14 @@ console.log('\n\x1b[1m7) PWA 与上线结构\x1b[0m');
   const camelliaHtml = readFileSync(join(root, 'camellia.html'), 'utf8');
   const manifest = JSON.parse(readFileSync(join(root, 'manifest.webmanifest'), 'utf8'));
   const sw = readFileSync(join(root, 'sw.js'), 'utf8');
-  const iconFiles = ['assets/icon.svg', 'assets/icon-180.png', 'assets/icon-192.png', 'assets/icon-512.png', 'assets/icon.ico'];
+  const iconFiles = [
+    'assets/icon.svg',
+    'assets/duoduo-garden-mascot.svg',
+    'assets/icon-180.png',
+    'assets/icon-192.png',
+    'assets/icon-512.png',
+    'assets/icon.ico',
+  ];
   const missingIcons = iconFiles.filter((rel) => {
     try {
       return statSync(join(root, rel)).size <= 0;
@@ -309,7 +316,7 @@ console.log('\n\x1b[1m7) PWA 与上线结构\x1b[0m');
   ok('花库首页与山茶体验页都已注册 manifest', indexHtml.includes('manifest.webmanifest') && camelliaHtml.includes('manifest.webmanifest'));
   ok('两个页面都已注册 Service Worker', indexHtml.includes('src/pwa.js') && camelliaHtml.includes('src/pwa.js'));
   ok('manifest 名称为多多花园', manifest.name === '多多花园' && manifest.short_name === '多多花园');
-  ok('PWA 图标完整', missingIcons.length === 0, missingIcons.join(', ') || `${iconFiles.length} 个`);
+  ok('PWA 图标与吉祥物完整', missingIcons.length === 0, missingIcons.join(', ') || `${iconFiles.length} 个`);
   ok('Service Worker 缓存花库与山茶页', sw.includes("'./index.html'") && sw.includes("'./camellia.html'"));
 }
 
