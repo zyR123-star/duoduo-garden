@@ -13,7 +13,7 @@
         fill="none" stroke="#5B526B" stroke-width="6" stroke-linecap="round"/>
 
   <g transform="translate(225 72) rotate(10)">
-    <path d="M-4 31C-35 35-46 60-33 78C-9 76 2 57-4 31Z"
+    <path d="M8-3C34-14 49-37 47-60C23-57 5-35 8-3Z"
           fill="#78CBA8" stroke="#5B526B" stroke-width="5" stroke-linejoin="round"/>
     <g fill="#FFFDF7" stroke="#5B526B" stroke-width="6" stroke-linejoin="round">
       <path d="M0-45C18-34 24-13 13 2C6 11-6 11-13 2C-24-13-18-34 0-45Z"/>
