@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#EDF2E9">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="多多花园">
+<title>多多花园</title>
+<meta name="description" content="多多花园：用手势唤醒一朵花。第一朵花是白山茶。">
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="icon" href="./assets/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="./assets/icon-180.png">
+<link rel="stylesheet" href="./garden.css">
+</head>
+<body>
+
+<div class="garden-shell">
+  <header class="garden-header">
+    <a class="brand-lockup" href="./" aria-label="多多花园首页">
+      <img src="./assets/icon.svg" alt="">
+      <span>
+        <strong>多多花园</strong>
+        <small>DUODUO GARDEN</small>
+      </span>
+    </a>
+    <div class="header-meta">
+      <span class="library-count"><i></i>花库 01</span>
+      <button class="info-button" id="info-button" type="button" aria-label="关于多多花园" title="关于多多花园">?</button>
+    </div>
+  </header>
+
+  <main>
+    <section class="garden-heading" aria-labelledby="garden-title">
+      <p class="eyebrow">FLOWER LIBRARY · NO. 01</p>
+      <h1 id="garden-title">把花开在<br><em>指尖。</em></h1>
+      <p class="garden-lede">一座会回应手势的花园。从一朵白山茶开始。</p>
+    </section>
+
+    <section class="library-section" aria-labelledby="library-title">
+      <header class="section-heading">
+        <div>
+          <p>COLLECTION</p>
+          <h2 id="library-title">花库</h2>
+        </div>
+        <span>01 / 01</span>
+      </header>
+
+      <a class="flower-feature" href="./camellia.html">
+        <img src="./docs/bouquet-preview.png" alt="多多花园中的白山茶花束">
+        <div class="flower-index">01</div>
+        <div class="flower-caption">
+          <div>
+            <p>THE FIRST FLOWER · CAMELLIA</p>
+            <h3>白山茶</h3>
+          </div>
+          <span class="enter-flower">
+            进入花园
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M5 12h13M13 6l6 6-6 6"></path>
+            </svg>
+          </span>
+        </div>
+      </a>
+    </section>
+
+    <section class="garden-note" aria-label="花库状态">
+      <p>花库会继续生长。</p>
+      <span>下一朵花，稍后见。</span>
+    </section>
+  </main>
+
+  <footer class="garden-footer">
+    <span>DUODUO GARDEN</span>
+    <span>LOCAL · OFFLINE READY</span>
+  </footer>
+</div>
+
+<dialog class="garden-dialog" id="garden-dialog">
+  <form method="dialog">
+    <img src="./assets/icon.svg" alt="">
+    <p class="eyebrow">DUODUO GARDEN</p>
+    <h2>多多花园</h2>
+    <p>花库收录可以用手势唤醒的花。摄像头画面只在当前设备处理，不会上传。</p>
+    <button type="submit">知道了</button>
+  </form>
+</dialog>
+
+<script type="module" src="./src/pwa.js"></script>
+<script type="module" src="./garden.js"></script>
+</body>
+</html>

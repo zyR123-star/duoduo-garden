@@ -1,0 +1,16 @@
+{
+  "name": "duoduo-garden",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "多多花园 · 手势花库",
+  "scripts": {
+    "start": "node tools/server.cjs",
+    "dev": "node tools/server.cjs",
+    "check": "node tools/check.mjs",
+    "preview:flower": "node tools/preview.mjs",
+    "sweep": "node tools/sweep.mjs"
+  },
+  "keywords": ["pwa", "garden", "flowers", "three.js", "mediapipe", "webgl", "hand-tracking"],
+  "license": "MIT"
+}
