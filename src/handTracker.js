@@ -11,6 +11,19 @@
  */
 
 const MP_BASE = new URL('../vendor/mediapipe/hands', import.meta.url).href;
+const MP_FALLBACK_BASE = 'https://fastly.jsdelivr.net/npm/@mediapipe/hands@0.4.1675469240';
+const HAND_ASSET_CACHE = 'duoduo-hand-assets-v1';
+const HAND_ASSETS = {
+  common: [
+    ['hands.binarypb', 550],
+    ['hands_solution_packed_assets_loader.js', 8327],
+    ['hands_solution_packed_assets.data', 4326731],
+    ['hands_solution_simd_wasm_bin.js', 276479],
+    ['hands_solution_simd_wasm_bin.wasm', 6026259],
+  ],
+  full: ['hand_landmark_full.tflite', 5478688],
+  lite: ['hand_landmark_lite.tflite', 2071408],
+};
 
 /** MediaPipe 的 21 点骨架连线 */
 export const HAND_CONNECTIONS = [
@@ -112,8 +125,10 @@ export function buildHandState(lm, handedness = '') {
 /* ------------------------------------------------------------------ */
 export class HandTracker {
   constructor(opts = {}) {
-    this.modelComplexity = opts.modelComplexity ?? (this._isMobile() ? 0 : 1);
+    this._mobile = this._isMobile();
+    this.modelComplexity = opts.modelComplexity ?? (this._mobile ? 0 : 1);
     this.onStatus = opts.onStatus || (() => {});
+    this.holdMs = opts.holdMs ?? (this._mobile ? 700 : 260);
     this.state = null;
     this.lastSeen = 0;
     this.busy = false;
@@ -122,6 +137,10 @@ export class HandTracker {
     this.frames = 0;
     this._hands = null;
     this._lastSend = 0;
+    this.assetBase = MP_BASE;
+    this.assetUrls = new Map();
+    this._loadedBytes = 0;
+    this._totalBytes = 0;
   }
 
   _isMobile() {
@@ -131,10 +150,11 @@ export class HandTracker {
   async init() {
     this.onStatus({ phase: 'loading', message: '正在加载手部识别模型…' });
     await this._loadScript();
+    await this._prepareAssets();
     if (!window.Hands) throw new Error('MediaPipe Hands 未就绪');
 
     const hands = new window.Hands({
-      locateFile: (file) => `${MP_BASE}/${file}`,
+      locateFile: (file) => this.assetUrls.get(file) || `${this.assetBase}/${file}`,
     });
     hands.setOptions({
       maxNumHands: 1,
@@ -151,10 +171,18 @@ export class HandTracker {
   }
 
   _loadScript() {
+    if (window.Hands) return Promise.resolve();
+    return this._loadScriptFrom(MP_BASE)
+      .catch(() => {
+        this.assetBase = MP_FALLBACK_BASE;
+        return this._loadScriptFrom(MP_FALLBACK_BASE);
+      });
+  }
+
+  _loadScriptFrom(base) {
     return new Promise((resolve, reject) => {
-      if (window.Hands) return resolve();
       const s = document.createElement('script');
-      s.src = `${MP_BASE}/hands.js`;
+      s.src = `${base}/hands.js`;
       s.crossOrigin = 'anonymous';
       s.async = true;
       const timer = setTimeout(() => {
@@ -168,6 +196,120 @@ export class HandTracker {
       };
       document.head.appendChild(s);
     });
+  }
+
+  _assetCacheKey(file) {
+    return new Request(new URL(`./__duoduo_hand_assets__/${HAND_ASSET_CACHE}/${file}`, location.href));
+  }
+
+  _reportAssetProgress(file) {
+    const percent = this._totalBytes
+      ? Math.min(100, Math.round((this._loadedBytes / this._totalBytes) * 100))
+      : 0;
+    const loadedMb = (this._loadedBytes / 1048576).toFixed(1);
+    const totalMb = (this._totalBytes / 1048576).toFixed(1);
+    this.onStatus({
+      phase: 'loading',
+      message: `正在加载手部模型 ${percent}% · ${loadedMb}/${totalMb} MB`,
+      file,
+      percent,
+      loaded: this._loadedBytes,
+      total: this._totalBytes,
+    });
+  }
+
+  async _openAssetCache() {
+    try {
+      return await caches.open(HAND_ASSET_CACHE);
+    } catch {
+      return null;
+    }
+  }
+
+  async _downloadAsset(file, expectedBytes) {
+    const url = `${this.assetBase}/${file}`;
+    const controller = new AbortController();
+    let stallTimer = 0;
+    const resetStallTimer = () => {
+      clearTimeout(stallTimer);
+      stallTimer = setTimeout(() => controller.abort(), 20000);
+    };
+    resetStallTimer();
+    try {
+      const response = await fetch(url, {
+        cache: 'force-cache',
+        signal: controller.signal,
+      });
+      if (!response.ok) throw new Error(`资源下载失败：${file}`);
+      resetStallTimer();
+
+      let blob;
+      if (response.body?.getReader) {
+        const reader = response.body.getReader();
+        const chunks = [];
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          resetStallTimer();
+          chunks.push(value);
+          this._loadedBytes += value.byteLength;
+          this._reportAssetProgress(file);
+        }
+        blob = new Blob(chunks, { type: response.headers.get('content-type') || '' });
+      } else {
+        blob = await response.blob();
+        this._loadedBytes += blob.size || expectedBytes;
+        this._reportAssetProgress(file);
+      }
+      return { blob, response };
+    } finally {
+      clearTimeout(stallTimer);
+    }
+  }
+
+  async _prepareAssets() {
+    const modelFile = this.modelComplexity === 0 ? HAND_ASSETS.lite : HAND_ASSETS.full;
+    const files = [...HAND_ASSETS.common, modelFile];
+    this._totalBytes = files.reduce((sum, [, size]) => sum + size, 0);
+    this._loadedBytes = 0;
+    const cache = await this._openAssetCache();
+
+    for (const [file, expectedBytes] of files) {
+      const key = this._assetCacheKey(file);
+      let blob = null;
+      let response = null;
+      try {
+        const cached = await cache?.match(key);
+        if (cached) {
+          blob = await cached.blob();
+          this._loadedBytes += blob.size || expectedBytes;
+          this._reportAssetProgress(file);
+        }
+      } catch {
+        blob = null;
+      }
+
+      if (!blob) {
+        try {
+          ({ blob, response } = await this._downloadAsset(file, expectedBytes));
+        } catch (error) {
+          if (this.assetBase === MP_FALLBACK_BASE) throw error;
+          this.assetBase = MP_FALLBACK_BASE;
+          ({ blob, response } = await this._downloadAsset(file, expectedBytes));
+        }
+        if (cache) {
+          try {
+            await cache.put(key, new Response(blob, {
+              headers: response?.headers || { 'Content-Type': blob.type || 'application/octet-stream' },
+            }));
+          } catch {
+            // 缓存不可用时仍使用本次下载的 Blob。
+          }
+        }
+      }
+
+      this.assetUrls.set(file, URL.createObjectURL(blob));
+    }
   }
 
   _onResults(results) {
@@ -187,7 +329,7 @@ export class HandTracker {
    * 预热：真正跑一次推理，确认 wasm / 模型都能加载。
    * legacy Hands 的首次 send 才会去拉模型，所以必须「真发一帧」才知道能不能用。
    */
-  async warmup(video, timeoutMs = 22000) {
+  async warmup(video, timeoutMs = 60000) {
     if (!this.ready) throw new Error('HandTracker 未初始化');
     this.busy = true;
     try {
@@ -223,12 +365,14 @@ export class HandTracker {
   }
 
   /** 手是否仍然在画面里（用于超时隐藏） */
-  isPresent(now = performance.now(), holdMs = 260) {
+  isPresent(now = performance.now(), holdMs = this.holdMs) {
     return !!this.state && now - this.lastSeen < holdMs;
   }
 
   close() {
     try { this._hands?.close(); } catch { /* noop */ }
+    for (const url of this.assetUrls.values()) URL.revokeObjectURL(url);
+    this.assetUrls.clear();
     this._hands = null;
     this.ready = false;
   }

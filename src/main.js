@@ -274,7 +274,15 @@ class App {
 
     // 手部模型（失败不影响主渲染）
     try {
-      this.tracker = new HandTracker();
+      this.tracker = new HandTracker({
+        onStatus: (status) => {
+          if (status.phase !== 'loading' || !status.total) return;
+          const now = performance.now();
+          if (now - (this._lastModelStatusAt || 0) < 400) return;
+          this._lastModelStatusAt = now;
+          this.toast(status.message, 1200);
+        },
+      });
       await this.tracker.init();
       this.toast('正在加载手部模型…', 2400);
       // 首次推理才会真正拉 wasm/模型，后台跑，别卡住渲染

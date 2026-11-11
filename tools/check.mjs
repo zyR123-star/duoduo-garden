@@ -343,7 +343,10 @@ console.log('\n\x1b[1m6) 本地运行时资源\x1b[0m');
   ok('两个体验页都使用本地 Three.js', [camelliaHtml, snowflakeHtml].every((html) =>
     html.includes('"three": "./vendor/three/three.module.js"')));
   ok('MediaPipe 使用本地 vendor 路径', trackerSrc.includes("new URL('../vendor/mediapipe/hands'"));
-  ok('运行时代码不依赖 jsDelivr', !/cdn\.jsdelivr/.test(camelliaHtml + snowflakeHtml + trackerSrc));
+  ok('MediaPipe 本地优先并带弱网备用源', trackerSrc.includes('MP_FALLBACK_BASE')
+    && trackerSrc.includes('fastly.jsdelivr.net/npm/@mediapipe/hands'));
+  ok('MediaPipe 有独立缓存与下载进度', trackerSrc.includes("HAND_ASSET_CACHE = 'duoduo-hand-assets-v1'")
+    && trackerSrc.includes('_reportAssetProgress'));
   ok('本地运行时资源完整', missing.length === 0, missing.join(', ') || `${assets.length} 个`);
 }
 
@@ -385,6 +388,8 @@ console.log('\n\x1b[1m7) PWA 与上线结构\x1b[0m');
   ok('PWA 图标与吉祥物完整', missingIcons.length === 0, missingIcons.join(', ') || `${iconFiles.length} 个`);
   ok('Service Worker 缓存三个页面', ['index.html', 'camellia.html', 'snowflake.html'].every((page) =>
     sw.includes(`'./${page}'`)));
+  ok('Service Worker 保留手部模型缓存', sw.includes("startsWith('duoduo-hand-assets-')"));
+  ok('应用壳导航缓存优先', sw.includes('const cached = await caches.match(request)'));
 }
 
 /* ------------------------------------------------------------------ */console.log(`\n\x1b[1m结果：${pass} 通过，${fail} 失败\x1b[0m\n`);

@@ -1,5 +1,5 @@
 /* 修改页面或资源后同步提升 CACHE 版本。 */
-const CACHE = 'duoduo-garden-v9';
+const CACHE = 'duoduo-garden-v10';
 const ASSETS = [
   './',
   './index.html',
@@ -44,7 +44,9 @@ self.addEventListener('install', (event) => {
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys()
-      .then((keys) => Promise.all(keys.filter((key) => key !== CACHE).map((key) => caches.delete(key))))
+      .then((keys) => Promise.all(keys
+        .filter((key) => key !== CACHE && !key.startsWith('duoduo-hand-assets-'))
+        .map((key) => caches.delete(key))))
       .then(() => self.clients.claim())
   );
 });
@@ -59,14 +61,24 @@ self.addEventListener('fetch', (event) => {
 
   if (request.mode === 'navigate') {
     event.respondWith(
-      fetch(request)
-        .then((response) => {
-          const copy = response.clone();
-          caches.open(CACHE).then((cache) => cache.put(request, copy));
+      (async () => {
+        const cached = await caches.match(request);
+        if (cached) {
+          fetch(request)
+            .then((response) => {
+              if (response.ok) caches.open(CACHE).then((cache) => cache.put(request, response));
+            })
+            .catch(() => {});
+          return cached;
+        }
+        try {
+          const response = await fetch(request);
+          if (response.ok) {
+            const copy = response.clone();
+            caches.open(CACHE).then((cache) => cache.put(request, copy));
+          }
           return response;
-        })
-        .catch(() => caches.match(request).then((cached) => {
-          if (cached) return cached;
+        } catch {
           const path = new URL(request.url).pathname;
           const page = path.endsWith('/snowflake.html')
             ? './snowflake.html'
@@ -74,7 +86,8 @@ self.addEventListener('fetch', (event) => {
               ? './camellia.html'
               : './index.html';
           return caches.match(page);
-        }))
+        }
+      })()
     );
     return;
   }

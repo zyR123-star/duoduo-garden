@@ -55,6 +55,7 @@ class SnowflakeExperience {
     this.paused = false;
     this.pipOn = true;
     this._pipTick = 0;
+    this.trackerPhase = 'idle';
 
     this._initRenderer();
     this._initUI();
@@ -103,6 +104,7 @@ class SnowflakeExperience {
     $('btn-demo').addEventListener('click', () => this.enterDemo());
     $('btn-reset').addEventListener('click', () => this.resetCapture());
     $('btn-pip').addEventListener('click', () => this.setPip(!this.pipOn));
+    $('btn-retry').addEventListener('click', () => this.retryHandTracking());
   }
 
   _bindEvents() {
@@ -124,8 +126,13 @@ class SnowflakeExperience {
     });
 
     $('stage').addEventListener('pointerdown', (event) => {
-      if (this.mode !== 'demo' || this.intro.classList.contains('gone') === false) return;
+      if (this.intro.classList.contains('gone') === false) return;
       event.preventDefault();
+      if (this.mode === 'camera' && this.phase === 'search') {
+        this.tryCapture(event.clientX, event.clientY, CAPTURE_DISTANCE + 20);
+        return;
+      }
+      if (this.mode !== 'demo') return;
       this.pointerActive = true;
       this.pointer.x = event.clientX;
       this.pointer.y = event.clientY;
@@ -210,20 +217,54 @@ class SnowflakeExperience {
     $('btn-pip').hidden = false;
     this.pip.resize();
     this.setPip(true);
-    this._setPrompt('正在寻找手部', '伸出手，接住一朵飘落的雪花');
+    this._setPrompt('准备手部识别', '首次约 13 MB · 弱网请稍候');
+    void this._startHandTracking();
+  }
+
+  async _startHandTracking() {
+    if (!this.video || this.mode !== 'camera') return;
+    this.tracker?.close();
+    this.tracker = null;
+    this.trackerPhase = 'loading';
+    $('btn-retry').hidden = true;
 
     try {
-      this.tracker = new HandTracker();
-      await this.tracker.init();
-      this.tracker.warmup(video).then(() => {
-        this._setPrompt('伸出手', '把手掌移向飘落的雪花');
-      }).catch((error) => {
-        console.warn('[snowflake] hand model warmup failed:', error);
-        this._fallbackToDemo('手部模型加载失败 · 已进入演示模式');
+      this.tracker = new HandTracker({
+        onStatus: (status) => this._onTrackerStatus(status),
       });
+      await this.tracker.init();
+      if (this.mode !== 'camera') return;
+      this.trackerPhase = 'warming';
+      this._setPrompt('启动手部识别', '模型已就绪，正在读取摄像头');
+      await this.tracker.warmup(this.video, 90000);
+      if (this.mode !== 'camera') return;
+      this.trackerPhase = 'ready';
+      this._setPrompt('伸出手', '把手掌或指尖移向飘落的雪花');
     } catch (error) {
-      console.warn('[snowflake] hand tracker init failed:', error);
-      this._fallbackToDemo('手部识别组件加载失败 · 已进入演示模式');
+      console.warn('[snowflake] hand tracker failed:', error);
+      this.tracker?.close();
+      this.tracker = null;
+      this.trackerPhase = 'error';
+      $('btn-retry').hidden = false;
+      this._setPrompt('手部识别未就绪', '检查网络后点右上角“重试”', true);
+      this.toast('手部模型加载失败，已保留摄像头画面', 5200);
+    }
+  }
+
+  retryHandTracking() {
+    if (this.mode === 'camera' && this.phase === 'search') {
+      void this._startHandTracking();
+    }
+  }
+
+  _onTrackerStatus(status) {
+    if (this.mode !== 'camera' || !status) return;
+    if (status.phase === 'loading') {
+      this._setPrompt('准备手部识别',
+        status.total ? status.message : '首次约 13 MB · 弱网请稍候');
+      $('pip-state').textContent = status.total ? `${status.percent}%` : '加载中';
+    } else if (status.phase === 'ready') {
+      $('pip-state').textContent = '识别已就绪';
     }
   }
 
@@ -306,6 +347,22 @@ class SnowflakeExperience {
     return null;
   }
 
+  _captureCandidates(hand, input) {
+    const points = [];
+    if (input) points.push(input);
+    if (this.mode === 'camera' && hand?.landmarks) {
+      for (const index of [8, 12]) {
+        const point = hand.landmarks[index];
+        if (!point) continue;
+        points.push({
+          x: (1 - point.x) * window.innerWidth,
+          y: point.y * window.innerHeight,
+        });
+      }
+    }
+    return points;
+  }
+
   _placeReticle(point) {
     const reticle = $('capture-reticle');
     if (!point) {
@@ -376,14 +433,19 @@ class SnowflakeExperience {
     $('capture-reticle').classList.toggle('locked',
       Boolean(nearest && nearest.distance < CAPTURE_DISTANCE + 18));
 
-    if (input && nearest && nearest.distance < (this.mode === 'demo' ? 105 : CAPTURE_DISTANCE)) {
-      if (this.tryCapture(input.x, input.y, this.mode === 'demo' ? 105 : CAPTURE_DISTANCE)) return;
+    const radius = this.mode === 'demo' ? 105 : CAPTURE_DISTANCE;
+    const candidates = this._captureCandidates(hand, input);
+    for (const point of candidates) {
+      const found = this.snowfall.findNearest(point.x, point.y, radius);
+      if (found && this.tryCapture(point.x, point.y, radius)) return;
     }
 
     if (this.mode === 'camera') {
-      if (!this.tracker) this._setPrompt('等待手部模型', '模型准备好后伸出手捕捉雪花', this.phase === 'search');
+      if (this.trackerPhase === 'loading' || this.trackerPhase === 'warming'
+        || this.trackerPhase === 'error') return;
+      if (!this.tracker) this._setPrompt('正在准备手部识别', '请稍候', this.phase === 'search');
       else if (!hand) this._setPrompt('伸出手', '接住一朵飘落的雪花', this.phase === 'search');
-      else this._setPrompt('靠近雪花', '把手掌移到最近的雪花上', this.phase === 'search');
+      else this._setPrompt('靠近雪花', '把手掌或指尖移到最近的雪花上', this.phase === 'search');
     }
   }
 

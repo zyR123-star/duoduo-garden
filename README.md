@@ -41,8 +41,8 @@ npx vite                  # 也可以，项目本身就是原生 ESM
 
 选择「雪花」后，先伸出手接住一朵飘雪；捕捉成功后张开手掌，让晶枝盛开。无摄像头时会自动进入演示模式，移动鼠标或手指靠近雪花即可完成捕捉，按住屏幕模拟张掌。
 
-> Three.js 与 MediaPipe Hands 已随项目本地携带，无需访问外部 CDN。
-> 如果本地手部模型文件缺失，页面会**自动进入演示模式**：花朵照常呼吸，按住鼠标/屏幕即可模拟「张开手掌」，不会白屏。
+> Three.js 与 MediaPipe Hands 都随项目本地携带，本地优先加载；弱网或本地大文件受阻时会自动尝试备用 CDN。
+> 手部模型首次约 12.1 MB，页面会显示真实下载百分比；完成一次后会保存在独立缓存，之后可离线复用。
 
 ---
 
@@ -295,7 +295,7 @@ URL 参数（调试用）：
 ## 自检与离线预览
 
 ```bash
-node tools/check.mjs      # 61 项：两朵花几何、四种雪花、tension、着色器与 PWA
+node tools/check.mjs      # 64 项：两朵花几何、四种雪花、tension、着色器与 PWA
 node tools/preview.mjs    # 输出 preview-out/*.png（不同绽放度）
 node tools/sweep.mjs      # 输出参数对比拼图 sweep.png
 ```
@@ -310,7 +310,7 @@ node tools/sweep.mjs      # 输出参数对比拼图 sweep.png
 必须是 `http://localhost` 或 `https`。用 `file://` 打开会被浏览器直接拒绝。
 
 **一直显示「正在加载手部模型」**
-检查 `vendor/mediapipe/hands/` 是否完整上传，尤其是 `.wasm`、`.tflite` 和 `.data` 文件。资源缺失时会自动降级到演示模式。
+先看提示中的 MB 和百分比是否继续增长。首次需要约 12.1 MB；弱网时允许继续等待，下载完成的文件会保留。失败后雪花页会保留摄像头画面，并显示右上角「重试」。仍失败时检查 `vendor/mediapipe/hands/` 是否完整上传，尤其是 `.wasm`、`.tflite` 和 `.data` 文件。
 
 **为什么用 legacy `@mediapipe/hands` 而不是 tasks-vision**
 legacy 包的 wasm + 模型全部在同一个 npm 包里，适合整包本地化；`tasks-vision` 还要额外从 `storage.googleapis.com` 拉 `.task` 模型，那条线路在部分地区不稳定。整个追踪层是 `HandTracker` 一个类，想换实现只改这一个文件。
