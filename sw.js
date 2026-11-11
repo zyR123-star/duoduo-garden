@@ -1,5 +1,5 @@
 /* 修改页面或资源后同步提升 CACHE 版本。 */
-const CACHE = 'duoduo-garden-v10';
+const CACHE = 'duoduo-garden-v12';
 const ASSETS = [
   './',
   './index.html',
@@ -10,6 +10,7 @@ const ASSETS = [
   './snowflake.css',
   './garden.js',
   './src/pwa.js',
+  './src/threeRuntime.js',
   './src/main.js',
   './src/flower.js',
   './src/flowerGeometry.js',

@@ -8,7 +8,7 @@
  * 这样 WebGL 挂掉时回退到 CSS 也不会跳色。
  */
 
-import * as THREE from 'three';
+import THREE from 'three';
 
 const VERT = /* glsl */ `
   varying vec2 vUv;

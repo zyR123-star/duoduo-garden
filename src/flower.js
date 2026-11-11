@@ -7,7 +7,7 @@
  * · 另附：柔光 Sprite（花心光晕）、浮尘 Points（氛围）。
  */
 
-import * as THREE from 'three';
+import THREE from 'three';
 import { buildFlowerParticles, buildMotes, PALETTE } from './flowerGeometry.js';
 
 const DEG = Math.PI / 180;

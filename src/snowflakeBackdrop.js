@@ -1,4 +1,4 @@
-import * as THREE from 'three';
+import THREE from 'three';
 
 const VERT = /* glsl */ `
   varying vec2 vUv;

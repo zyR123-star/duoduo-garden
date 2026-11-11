@@ -1,4 +1,4 @@
-import * as THREE from 'three';
+import THREE from 'three';
 import { mulberry32 } from './flowerGeometry.js';
 import { SNOWFLAKE_VARIANTS } from './snowflakeGeometry.js';
 

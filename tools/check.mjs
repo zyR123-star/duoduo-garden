@@ -325,6 +325,7 @@ console.log('\n\x1b[1m6) 本地运行时资源\x1b[0m');
   const camelliaHtml = readFileSync(join(root, 'camellia.html'), 'utf8');
   const snowflakeHtml = readFileSync(join(root, 'snowflake.html'), 'utf8');
   const trackerSrc = readFileSync(join(root, 'src', 'handTracker.js'), 'utf8');
+  const threeRuntime = readFileSync(join(root, 'src', 'threeRuntime.js'), 'utf8');
   const assets = [
     'vendor/three/three.module.js',
     'vendor/mediapipe/hands/hands.js',
@@ -340,8 +341,9 @@ console.log('\n\x1b[1m6) 本地运行时资源\x1b[0m');
       return true;
     }
   });
-  ok('两个体验页都使用本地 Three.js', [camelliaHtml, snowflakeHtml].every((html) =>
-    html.includes('"three": "./vendor/three/three.module.js"')));
+  ok('Three.js 首访 CDN、后续与离线本地优先', [camelliaHtml, snowflakeHtml].every((html) =>
+    html.includes('"three": "./src/threeRuntime.js"'))
+    && threeRuntime.includes('LOCAL_THREE') && threeRuntime.includes('REMOTE_THREE'));
   ok('MediaPipe 使用本地 vendor 路径', trackerSrc.includes("new URL('../vendor/mediapipe/hands'"));
   ok('MediaPipe 本地优先并带弱网备用源', trackerSrc.includes('MP_FALLBACK_BASE')
     && trackerSrc.includes('fastly.jsdelivr.net/npm/@mediapipe/hands'));

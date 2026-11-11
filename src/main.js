@@ -10,7 +10,7 @@
  * 指针／触摸模拟握拳与张开，页面永远不会停在白屏。
  */
 
-import * as THREE from 'three';
+import THREE from 'three';
 import { Camellia } from './flower.js';
 import { HandTracker } from './handTracker.js';
 import { Backdrop } from './backdrop.js';

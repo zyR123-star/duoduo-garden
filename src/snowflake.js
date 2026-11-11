@@ -2,7 +2,7 @@
  * 雪花 · 粒子渲染层
  */
 
-import * as THREE from 'three';
+import THREE from 'three';
 import {
   buildSnowflakeParticles,
   buildSnowDust,

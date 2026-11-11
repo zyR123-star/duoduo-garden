@@ -1,4 +1,4 @@
-import * as THREE from 'three';
+import THREE from 'three';
 import { Snowflake } from './snowflake.js';
 import { SnowflakeBackdrop } from './snowflakeBackdrop.js';
 import { Snowfall } from './snowfall.js';
@@ -44,6 +44,7 @@ class SnowflakeExperience {
     this.pointerDown = false;
     this.pointerActive = false;
     this.pointer = { x: window.innerWidth * 0.5, y: window.innerHeight * 0.45 };
+    this.reticlePoint = { x: window.innerWidth * 0.5, y: window.innerHeight * 0.5 };
     this.handVisible = false;
     this.lastHandAt = 0;
     this.captureAge = 0;
@@ -366,12 +367,22 @@ class SnowflakeExperience {
   _placeReticle(point) {
     const reticle = $('capture-reticle');
     if (!point) {
-      reticle.classList.remove('on', 'locked');
+      if (this.mode === 'camera' && this.intro.classList.contains('gone')) {
+        reticle.style.left = `${this.reticlePoint.x}px`;
+        reticle.style.top = `${this.reticlePoint.y}px`;
+        reticle.classList.add('on', 'waiting');
+        reticle.classList.remove('locked');
+      } else {
+        reticle.classList.remove('on', 'waiting', 'locked');
+      }
       return;
     }
+    this.reticlePoint.x = point.x;
+    this.reticlePoint.y = point.y;
     reticle.style.left = `${point.x}px`;
     reticle.style.top = `${point.y}px`;
     reticle.classList.add('on');
+    reticle.classList.remove('waiting');
   }
 
   _burst(x, y) {

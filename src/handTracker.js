@@ -137,7 +137,11 @@ export class HandTracker {
     this.frames = 0;
     this._hands = null;
     this._lastSend = 0;
-    this.assetBase = MP_BASE;
+    this.assetBase = location.hostname.endsWith('github.io')
+      && navigator.onLine
+      && !navigator.serviceWorker?.controller
+      ? MP_FALLBACK_BASE
+      : MP_BASE;
     this.assetUrls = new Map();
     this._loadedBytes = 0;
     this._totalBytes = 0;
@@ -172,10 +176,10 @@ export class HandTracker {
 
   _loadScript() {
     if (window.Hands) return Promise.resolve();
-    return this._loadScriptFrom(MP_BASE)
+    return this._loadScriptFrom(this.assetBase)
       .catch(() => {
-        this.assetBase = MP_FALLBACK_BASE;
-        return this._loadScriptFrom(MP_FALLBACK_BASE);
+        this.assetBase = this.assetBase === MP_BASE ? MP_FALLBACK_BASE : MP_BASE;
+        return this._loadScriptFrom(this.assetBase);
       });
   }
 
@@ -293,9 +297,12 @@ export class HandTracker {
         try {
           ({ blob, response } = await this._downloadAsset(file, expectedBytes));
         } catch (error) {
-          if (this.assetBase === MP_FALLBACK_BASE) throw error;
-          this.assetBase = MP_FALLBACK_BASE;
-          ({ blob, response } = await this._downloadAsset(file, expectedBytes));
+          this.assetBase = this.assetBase === MP_BASE ? MP_FALLBACK_BASE : MP_BASE;
+          try {
+            ({ blob, response } = await this._downloadAsset(file, expectedBytes));
+          } catch {
+            throw error;
+          }
         }
         if (cache) {
           try {
