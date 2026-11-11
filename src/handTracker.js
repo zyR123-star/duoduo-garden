@@ -90,7 +90,7 @@ function palmCenter(lm) {
 
 /**
  * 从 21 点解出上层要用的所有量
- * 归一化坐标（0~1，已按 selfieMode 镜像）
+ * 归一化坐标（0~1，原始摄像头方向；界面显示时手动镜像）
  */
 export function buildHandState(lm, handedness = '') {
   const palm = palmCenter(lm);
@@ -141,7 +141,7 @@ export class HandTracker {
       modelComplexity: this.modelComplexity,
       minDetectionConfidence: 0.6,
       minTrackingConfidence: 0.55,
-      selfieMode: true, // 与镜像显示对齐
+      selfieMode: false, // 坐标保持原始方向，由界面统一做镜像
     });
     hands.onResults((results) => this._onResults(results));
 

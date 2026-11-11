@@ -225,11 +225,14 @@ main {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: clamp(14px, 2vw, 22px);
+  min-width: 0;
 }
 
 .flower-feature {
   position: relative;
   display: block;
+  width: 100%;
+  min-width: 0;
   aspect-ratio: 16 / 10;
   min-height: 380px;
   overflow: hidden;
@@ -309,6 +312,10 @@ main {
   padding: clamp(24px, 4vw, 42px);
   background: rgba(3, 12, 8, 0.72);
   backdrop-filter: blur(14px);
+}
+
+.flower-caption > div {
+  min-width: 0;
 }
 
 .flower-caption p {

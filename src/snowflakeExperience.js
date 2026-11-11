@@ -18,6 +18,7 @@ const PARTICLE_COUNT = Math.max(
   Math.min(18000, Number(params.get('particles')) || (IS_MOBILE ? 7800 : 12000)),
 );
 const SNOW_COUNT = Number(params.get('snow')) || (IS_MOBILE ? 14 : 20);
+const CAPTURE_DISTANCE = IS_MOBILE ? 112 : 82;
 
 const clamp01 = (value) => (value < 0 ? 0 : value > 1 ? 1 : value);
 const smoothstep = (a, b, x) => {
@@ -192,10 +193,12 @@ class SnowflakeExperience {
     }
 
     const video = document.createElement('video');
+    video.className = 'camera-source';
     video.playsInline = true;
     video.muted = true;
     video.autoplay = true;
     video.srcObject = this.stream;
+    document.body.appendChild(video);
     this.video = video;
     try {
       await video.play();
@@ -245,6 +248,7 @@ class SnowflakeExperience {
     if (this.video) {
       this.video.pause();
       this.video.srcObject = null;
+      this.video.remove();
       this.video = null;
     }
     this.mode = 'demo';
@@ -372,10 +376,11 @@ class SnowflakeExperience {
     const attractor = input && this.phase === 'search' ? input : null;
     const nearest = this.snowfall.update(dt, attractor);
     this._placeReticle(input);
-    $('capture-reticle').classList.toggle('locked', Boolean(nearest && nearest.distance < 100));
+    $('capture-reticle').classList.toggle('locked',
+      Boolean(nearest && nearest.distance < CAPTURE_DISTANCE + 18));
 
-    if (input && nearest && nearest.distance < (this.mode === 'demo' ? 105 : 82)) {
-      if (this.tryCapture(input.x, input.y, this.mode === 'demo' ? 105 : 82)) return;
+    if (input && nearest && nearest.distance < (this.mode === 'demo' ? 105 : CAPTURE_DISTANCE)) {
+      if (this.tryCapture(input.x, input.y, this.mode === 'demo' ? 105 : CAPTURE_DISTANCE)) return;
     }
 
     if (this.mode === 'camera') {

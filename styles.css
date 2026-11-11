@@ -41,6 +41,14 @@ body {
   cursor: default;
 }
 
+.camera-source {
+  position: fixed;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
 /* ---------------- 舞台 ---------------- */
 .stage {
   position: fixed;
