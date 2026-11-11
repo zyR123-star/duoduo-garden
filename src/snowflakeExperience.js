@@ -193,12 +193,10 @@ class SnowflakeExperience {
     }
 
     const video = document.createElement('video');
-    video.className = 'camera-source';
     video.playsInline = true;
     video.muted = true;
     video.autoplay = true;
     video.srcObject = this.stream;
-    document.body.appendChild(video);
     this.video = video;
     try {
       await video.play();
@@ -248,7 +246,6 @@ class SnowflakeExperience {
     if (this.video) {
       this.video.pause();
       this.video.srcObject = null;
-      this.video.remove();
       this.video = null;
     }
     this.mode = 'demo';
