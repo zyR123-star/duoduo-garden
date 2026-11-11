@@ -14,6 +14,12 @@ import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { WHORLS, buildFlowerParticles } from '../src/flowerGeometry.js';
 import { measureTension } from '../src/handTracker.js';
+import {
+  SNOWFLAKE_VARIANTS,
+  buildSnowflakeParticles,
+  buildSnowDust,
+  normalizeSnowflakeVariant,
+} from '../src/snowflakeGeometry.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const root = join(__dirname, '..');
@@ -179,6 +185,46 @@ for (const n of [5000, 14000, 20000]) {
   ok('花苞横向尺寸 < 盛放', rBud < rBloom * 0.75, `bud=${rBud.toFixed(2)} bloom=${rBloom.toFixed(2)}`);
 }
 
+console.log('\n\x1b[1m3b) 雪花几何\x1b[0m');
+{
+  const p = buildSnowflakeParticles({ count: 6000 });
+  const dust = buildSnowDust(300);
+  const arrays = [
+    p.bud, p.bloom, p.normalBud, p.normalBloom, p.color, p.size, p.seed, p.delay,
+    dust.pos, dust.size, dust.colors,
+  ];
+  let finite = true;
+  for (const arr of arrays) {
+    for (let i = 0; i < arr.length; i++) {
+      if (!Number.isFinite(arr[i])) { finite = false; break; }
+    }
+    if (!finite) break;
+  }
+  const delaysValid = Array.from(p.delay).every((v) => v >= 0 && v <= 0.8);
+  ok('雪花 count=6000 数量正确', p.count === 6000);
+  ok('雪花几何与霜尘无 NaN/Inf', finite);
+  ok('雪花保持六向主枝', p.stats.arms === 6 && p.stats.segments > 100, `${p.stats.segments} 段`);
+  ok('雪花盛开半径有效', p.bounds.radius > 1.4 && p.bounds.radius < 1.9, `radius=${p.bounds.radius.toFixed(2)}`);
+  ok('雪花延迟分布在 0~0.8', delaysValid);
+  ok('雪花霜尘数量正确', dust.count === 300);
+
+  const variants = SNOWFLAKE_VARIANTS.map((variant, index) =>
+    buildSnowflakeParticles({ count: 5000, variant: index }));
+  const variantValid = variants.every((item, index) =>
+    item.stats.variant === index
+      && item.stats.variantId === SNOWFLAKE_VARIANTS[index].id
+      && item.stats.segments > 100
+      && item.bounds.radius > 1.4
+      && item.bounds.radius < 1.9);
+  const signatures = new Set(variants.map((item) =>
+    `${item.stats.segments}:${item.bounds.radius.toFixed(2)}`));
+  ok('四种雪花都有独立几何', variantValid && signatures.size === 4,
+    variants.map((item) => `${item.stats.variantId}:${item.stats.segments}`).join('  '));
+  ok('雪花变体编号与名称可还原', normalizeSnowflakeVariant(3) === 3
+    && normalizeSnowflakeVariant('leaf') === 2
+    && normalizeSnowflakeVariant(-1) === 3);
+}
+
 /* ------------------------------------------------------------------ */
 /* 4. 着色器 / 几何属性一致性                                         */
 /* ------------------------------------------------------------------ */
@@ -241,10 +287,20 @@ console.log('\n\x1b[1m5) DOM 契约与模块引用\x1b[0m');
   const htmlIds = [...html.matchAll(/id="([a-z0-9-]+)"/g)].map((m) => m[1]);
   ok('camellia.html 里 id 无重复', new Set(htmlIds).size === htmlIds.length);
 
+  const snowflakeHtml = readFileSync(join(root, 'snowflake.html'), 'utf8');
+  const snowflakeSrc = readFileSync(join(root, 'src', 'snowflakeExperience.js'), 'utf8');
+  const snowflakeIds = [...snowflakeSrc.matchAll(/\$\('([a-z0-9-]+)'\)/g)].map((m) => m[1]);
+  const missingSnowflake = [...new Set(snowflakeIds)].filter((id) =>
+    !snowflakeHtml.includes(`id="${id}"`));
+  const snowflakeHtmlIds = [...snowflakeHtml.matchAll(/id="([a-z0-9-]+)"/g)].map((m) => m[1]);
+  ok('雪花 JS 引用的 DOM id 都存在', missingSnowflake.length === 0, missingSnowflake.join(', '));
+  ok('snowflake.html 里 id 无重复', new Set(snowflakeHtmlIds).size === snowflakeHtmlIds.length);
+
   // 每个模块 import 的相对路径都必须真实存在
   const files = [
     'src/main.js', 'src/flower.js', 'src/bouquet.js', 'src/backdrop.js', 'src/skeleton.js',
-    'src/handTracker.js', 'src/handPreview.js',
+    'src/handTracker.js', 'src/handPreview.js', 'src/snowflakeExperience.js', 'src/snowflake.js',
+    'src/snowflakeGeometry.js', 'src/snowflakeBackdrop.js', 'src/snowfall.js',
   ];
   const badImports = [];
   for (const rel of files) {
@@ -266,7 +322,8 @@ console.log('\n\x1b[1m5) DOM 契约与模块引用\x1b[0m');
 /* ------------------------------------------------------------------ */
 console.log('\n\x1b[1m6) 本地运行时资源\x1b[0m');
 {
-  const html = readFileSync(join(root, 'camellia.html'), 'utf8');
+  const camelliaHtml = readFileSync(join(root, 'camellia.html'), 'utf8');
+  const snowflakeHtml = readFileSync(join(root, 'snowflake.html'), 'utf8');
   const trackerSrc = readFileSync(join(root, 'src', 'handTracker.js'), 'utf8');
   const assets = [
     'vendor/three/three.module.js',
@@ -283,9 +340,10 @@ console.log('\n\x1b[1m6) 本地运行时资源\x1b[0m');
       return true;
     }
   });
-  ok('Three.js 使用本地 vendor 路径', html.includes('"three": "./vendor/three/three.module.js"'));
+  ok('两个体验页都使用本地 Three.js', [camelliaHtml, snowflakeHtml].every((html) =>
+    html.includes('"three": "./vendor/three/three.module.js"')));
   ok('MediaPipe 使用本地 vendor 路径', trackerSrc.includes("new URL('../vendor/mediapipe/hands'"));
-  ok('运行时代码不依赖 jsDelivr', !/cdn\.jsdelivr/.test(html + trackerSrc));
+  ok('运行时代码不依赖 jsDelivr', !/cdn\.jsdelivr/.test(camelliaHtml + snowflakeHtml + trackerSrc));
   ok('本地运行时资源完整', missing.length === 0, missing.join(', ') || `${assets.length} 个`);
 }
 
@@ -296,6 +354,7 @@ console.log('\n\x1b[1m7) PWA 与上线结构\x1b[0m');
 {
   const indexHtml = readFileSync(join(root, 'index.html'), 'utf8');
   const camelliaHtml = readFileSync(join(root, 'camellia.html'), 'utf8');
+  const snowflakeHtml = readFileSync(join(root, 'snowflake.html'), 'utf8');
   const manifest = JSON.parse(readFileSync(join(root, 'manifest.webmanifest'), 'utf8'));
   const sw = readFileSync(join(root, 'sw.js'), 'utf8');
   const iconFiles = [
@@ -305,6 +364,8 @@ console.log('\n\x1b[1m7) PWA 与上线结构\x1b[0m');
     'assets/icon-192.png',
     'assets/icon-512.png',
     'assets/icon.ico',
+    'docs/snowflake-preview.png',
+    'docs/snowflake-preview-mobile.png',
   ];
   const missingIcons = iconFiles.filter((rel) => {
     try {
@@ -313,11 +374,17 @@ console.log('\n\x1b[1m7) PWA 与上线结构\x1b[0m');
       return true;
     }
   });
-  ok('花库首页与山茶体验页都已注册 manifest', indexHtml.includes('manifest.webmanifest') && camelliaHtml.includes('manifest.webmanifest'));
-  ok('两个页面都已注册 Service Worker', indexHtml.includes('src/pwa.js') && camelliaHtml.includes('src/pwa.js'));
+  ok('花库卡片包含两朵花', indexHtml.includes('href="./camellia.html"') && indexHtml.includes('href="./snowflake.html"'));
+  ok('三个页面都已注册 manifest', [indexHtml, camelliaHtml, snowflakeHtml].every((html) =>
+    html.includes('manifest.webmanifest')));
+  ok('三个页面都已注册 Service Worker', [indexHtml, camelliaHtml, snowflakeHtml].every((html) =>
+    html.includes('src/pwa.js')));
   ok('manifest 名称为多多花园', manifest.name === '多多花园' && manifest.short_name === '多多花园');
+  ok('manifest 包含两朵花快捷入口', ['camellia.html', 'snowflake.html'].every((url) =>
+    manifest.shortcuts?.some((item) => item.url.endsWith(url))));
   ok('PWA 图标与吉祥物完整', missingIcons.length === 0, missingIcons.join(', ') || `${iconFiles.length} 个`);
-  ok('Service Worker 缓存花库与山茶页', sw.includes("'./index.html'") && sw.includes("'./camellia.html'"));
+  ok('Service Worker 缓存三个页面', ['index.html', 'camellia.html', 'snowflake.html'].every((page) =>
+    sw.includes(`'./${page}'`)));
 }
 
 /* ------------------------------------------------------------------ */console.log(`\n\x1b[1m结果：${pass} 通过，${fail} 失败\x1b[0m\n`);

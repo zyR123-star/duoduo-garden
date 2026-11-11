@@ -2,9 +2,12 @@
 
 **在线预览 → https://zyr123-star.github.io/duoduo-garden/**
 
-一座可以用手势唤醒的花园。花库当前收录第一朵花「白山茶」，进入体验后，一握手整束花收拢待放；张开手掌，重瓣白山茶会一层一层散开。
+一座可以用手势唤醒的花园。花库当前收录两朵花：
 
-项目是独立静态 PWA：根页面是花库，山茶使用独立体验页；Three.js、MediaPipe、图标和离线缓存都随项目携带。
+- **白山茶**：握拳时整束花收拢待放，张开手掌后重瓣山茶一层层散开。
+- **雪花**：空中有羽状、板晶、叶瓣、密晶四种形态；先接住一片，捕捉成功后张开手掌，被抓中的那一型会从指尖放大盛开，其余雪花继续飘落。
+
+项目是独立静态 PWA：根页面是花库，两朵花各用独立体验页；Three.js、MediaPipe、图标和离线缓存都随项目携带。
 
 云朵吉祥物多多会在花库迎接来客，她的耳边别着一朵白山茶；应用图标使用同一角色和柔绿色花园底。
 
@@ -12,7 +15,9 @@
 
 ![白山茶花束 · 手控盛放](docs/bouquet-preview.png)
 
-> 上图为真实浏览器的桌面盛放状态；`tools/preview.mjs` 继续用于单朵粒子花的几何与曝光回归。
+![雪花 · 捕捉后盛开](docs/snowflake-preview.png)
+
+> 上图为真实浏览器的桌面盛放状态；`tools/preview.mjs` 继续用于白山茶粒子的几何与曝光回归。
 
 ---
 
@@ -33,6 +38,8 @@ npx vite                  # 也可以，项目本身就是原生 ESM
 ```
 
 打开首页 → 选择「白山茶」→ 点「开启摄像头」→ 举起手，掌心朝向镜头。
+
+选择「雪花」后，先伸出手接住一朵飘雪；捕捉成功后张开手掌，让晶枝盛开。无摄像头时会自动进入演示模式，移动鼠标或手指靠近雪花即可完成捕捉，按住屏幕模拟张掌。
 
 > Three.js 与 MediaPipe Hands 已随项目本地携带，无需访问外部 CDN。
 > 如果本地手部模型文件缺失，页面会**自动进入演示模式**：花朵照常呼吸，按住鼠标/屏幕即可模拟「张开手掌」，不会白屏。
@@ -218,9 +225,11 @@ float shade = 0.72 + 0.40 * diff + 0.20 * pow(1.0 - abs(wn.z), 2.0);
 duoduo-garden/
 ├── index.html              花库首页
 ├── camellia.html           白山茶手控体验页
+├── snowflake.html          雪花捕捉与手控体验页
 ├── garden.css              花库视觉与响应式布局
 ├── styles.css              白山茶体验界面
-├── manifest.webmanifest    PWA 名称、图标和山茶快捷入口
+├── snowflake.css           雪花体验界面
+├── manifest.webmanifest    PWA 名称、图标和两朵花快捷入口
 ├── sw.js                   离线缓存
 ├── start-duoduo-garden.cmd 打开正式网址
 ├── 更新日志.md
@@ -234,10 +243,15 @@ duoduo-garden/
 │   ├── handTracker.js      MediaPipe 封装 + tension 公式 + 预热探测
 │   ├── backdrop.js         背景：全屏墨绿渐变（WebGL，颜色对齐 --ink）
 │   ├── handPreview.js      右下角手部捕捉小窗（取景框 + 骨架 + 张力）
-│   └── skeleton.js         骨架绘制（小窗用）
+│   ├── skeleton.js         骨架绘制（小窗用）
+│   ├── snowflakeExperience.js 飘雪→捕捉→开花状态机
+│   ├── snowfall.js         小雪花群、漂移吸附与捕捉
+│   ├── snowflakeGeometry.js ★ 纯数学：六向晶枝、双姿态、法向、霜尘
+│   ├── snowflake.js        three.js 粒子晶花与光晕
+│   └── snowflakeBackdrop.js 墨青冬夜背景
 └── tools/
     ├── server.cjs          本地静态服务（端口 4182）
-    ├── check.mjs           自检：tension 回归 / 阈值 / 几何 / 着色器一致性
+    ├── check.mjs           自检：两朵花几何 / tension / 着色器 / PWA
     ├── preview.mjs         离线光栅器：没浏览器也能把粒子渲染成 PNG
     └── sweep.mjs           参数扫描，出对比图
 ```
@@ -269,6 +283,7 @@ URL 参数（调试用）：
 ?demo=1            强制演示模式
 ?particles=20000   覆盖粒子数
 ?pitch=0.42        调整俯视角（弧度，默认 0.80 ≈ 46°）
+?variant=1         雪花页固定展示指定形态（0~3）
 ```
 
 快捷键：`H` 骨架 · `C` 手部捕捉小窗 · `空格` 自动演示 · `?` 说明
@@ -280,7 +295,7 @@ URL 参数（调试用）：
 ## 自检与离线预览
 
 ```bash
-node tools/check.mjs      # 49 项：tension、几何、着色器、本地资源与 PWA 结构
+node tools/check.mjs      # 61 项：两朵花几何、四种雪花、tension、着色器与 PWA
 node tools/preview.mjs    # 输出 preview-out/*.png（不同绽放度）
 node tools/sweep.mjs      # 输出参数对比拼图 sweep.png
 ```

@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="多多花园">
 <title>多多花园</title>
-<meta name="description" content="多多花园：用手势唤醒一朵花。第一朵花是白山茶。">
+<meta name="description" content="多多花园：接住飘落的雪花，或用手势唤醒一朵白山茶。">
 <link rel="manifest" href="./manifest.webmanifest">
 <link rel="icon" href="./assets/icon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="./assets/icon-180.png">
@@ -26,7 +26,7 @@
       </span>
     </a>
     <div class="header-meta">
-      <span class="library-count"><i></i>花库 01</span>
+      <span class="library-count"><i></i>花库 02</span>
       <button class="info-button" id="info-button" type="button" aria-label="关于多多花园" title="关于多多花园">?</button>
     </div>
   </header>
@@ -34,9 +34,9 @@
   <main>
     <section class="garden-heading" aria-labelledby="garden-title">
       <div class="heading-copy">
-        <p class="eyebrow">FLOWER LIBRARY · NO. 01</p>
+        <p class="eyebrow">FLOWER LIBRARY · TWO BLOOMS</p>
         <h1 id="garden-title">把花开在<br><em>指尖。</em></h1>
-        <p class="garden-lede">一座会回应手势的花园。从一朵白山茶开始。</p>
+        <p class="garden-lede">佳嘉来给你送花啦</p>
       </div>
       <img class="garden-mascot" src="./assets/duoduo-garden-mascot.svg" alt="别着白山茶的多多云朵吉祥物">
     </section>
@@ -47,25 +47,47 @@
           <p>COLLECTION</p>
           <h2 id="library-title">花库</h2>
         </div>
-        <span>01 / 01</span>
+        <span>02 / 02</span>
       </header>
 
-      <a class="flower-feature" href="./camellia.html">
-        <img src="./docs/bouquet-preview.png" alt="多多花园中的白山茶花束">
-        <div class="flower-index">01</div>
-        <div class="flower-caption">
-          <div>
-            <p>THE FIRST FLOWER · CAMELLIA</p>
-            <h3>白山茶</h3>
+      <div class="flower-grid">
+        <a class="flower-feature" href="./camellia.html">
+          <img src="./docs/bouquet-preview.png" alt="多多花园中的白山茶花束">
+          <div class="flower-index">01</div>
+          <div class="flower-caption">
+            <div>
+              <p>THE FIRST FLOWER · CAMELLIA</p>
+              <h3>白山茶</h3>
+            </div>
+            <span class="enter-flower">
+              进入花园
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M5 12h13M13 6l6 6-6 6"></path>
+              </svg>
+            </span>
           </div>
-          <span class="enter-flower">
-            进入花园
-            <svg viewBox="0 0 24 24" aria-hidden="true">
-              <path d="M5 12h13M13 6l6 6-6 6"></path>
-            </svg>
-          </span>
-        </div>
-      </a>
+        </a>
+
+        <a class="flower-feature flower-feature--snowflake" href="./snowflake.html">
+          <picture>
+            <source media="(max-width: 760px)" srcset="./docs/snowflake-preview-mobile.png">
+            <img src="./docs/snowflake-preview.png" alt="多多花园中的六向雪晶花">
+          </picture>
+          <div class="flower-index">02</div>
+          <div class="flower-caption">
+            <div>
+              <p>THE WINTER FLOWER · SNOW CRYSTAL</p>
+              <h3>雪花</h3>
+            </div>
+            <span class="enter-flower">
+              接住雪花
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M5 12h13M13 6l6 6-6 6"></path>
+              </svg>
+            </span>
+          </div>
+        </a>
+      </div>
     </section>
 
     <section class="garden-note" aria-label="花库状态">
