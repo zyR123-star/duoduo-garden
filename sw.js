@@ -1,5 +1,5 @@
 /* 修改页面或资源后同步提升 CACHE 版本。 */
-const CACHE = 'duoduo-garden-v12';
+const CACHE = 'duoduo-garden-v13';
 const ASSETS = [
   './',
   './index.html',

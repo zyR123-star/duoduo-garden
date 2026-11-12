@@ -1,9 +1,9 @@
 {
   "name": "duoduo-garden",
-  "version": "1.3.2",
+  "version": "1.3.3",
   "private": true,
   "type": "module",
-  "description": "多多花园 · 手势花库",
+  "description": "多多花园 · 手势藏品",
   "scripts": {
     "start": "node tools/server.cjs",
     "dev": "node tools/server.cjs",

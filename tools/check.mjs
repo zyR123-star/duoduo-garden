@@ -379,7 +379,7 @@ console.log('\n\x1b[1m7) PWA 与上线结构\x1b[0m');
       return true;
     }
   });
-  ok('花库卡片包含两朵花', indexHtml.includes('href="./camellia.html"') && indexHtml.includes('href="./snowflake.html"'));
+  ok('藏品卡片包含两朵花', indexHtml.includes('href="./camellia.html"') && indexHtml.includes('href="./snowflake.html"'));
   ok('三个页面都已注册 manifest', [indexHtml, camelliaHtml, snowflakeHtml].every((html) =>
     html.includes('manifest.webmanifest')));
   ok('三个页面都已注册 Service Worker', [indexHtml, camelliaHtml, snowflakeHtml].every((html) =>

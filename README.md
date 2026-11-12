@@ -2,16 +2,16 @@
 
 **在线预览 → https://zyr123-star.github.io/duoduo-garden/**
 
-一座可以用手势唤醒的花园。花库当前收录两朵花：
+一座可以用手势唤醒的花园。藏品当前收录两朵花：
 
 - **白山茶**：握拳时整束花收拢待放，张开手掌后重瓣山茶一层层散开。
 - **雪花**：空中有羽状、板晶、叶瓣、密晶四种形态；先接住一片，捕捉成功后张开手掌，被抓中的那一型会从指尖放大盛开，其余雪花继续飘落。
 
-项目是独立静态 PWA：根页面是花库，两朵花各用独立体验页；Three.js、MediaPipe、图标和离线缓存都随项目携带。
+项目是独立静态 PWA：根页面是藏品，两朵花各用独立体验页；Three.js、MediaPipe、图标和离线缓存都随项目携带。
 
-云朵吉祥物多多会在花库迎接来客，她的耳边别着一朵白山茶；应用图标使用同一角色和柔绿色花园底。
+云朵吉祥物多多会在藏品页迎接来客，她的耳边别着一朵白山茶；应用图标使用同一角色和柔绿色花园底。
 
-![多多花园花库](docs/garden-home.png)
+![多多花园藏品](docs/garden-home.png)
 
 ![白山茶花束 · 手控盛放](docs/bouquet-preview.png)
 
@@ -223,10 +223,10 @@ float shade = 0.72 + 0.40 * diff + 0.20 * pow(1.0 - abs(wn.z), 2.0);
 
 ```
 duoduo-garden/
-├── index.html              花库首页
+├── index.html              藏品首页
 ├── camellia.html           白山茶手控体验页
 ├── snowflake.html          雪花捕捉与手控体验页
-├── garden.css              花库视觉与响应式布局
+├── garden.css              藏品视觉与响应式布局
 ├── styles.css              白山茶体验界面
 ├── snowflake.css           雪花体验界面
 ├── manifest.webmanifest    PWA 名称、图标和两朵花快捷入口
