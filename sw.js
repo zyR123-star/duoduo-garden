@@ -1,5 +1,5 @@
 /* 修改页面或资源后同步提升 CACHE 版本。 */
-const CACHE = 'duoduo-garden-v13';
+const CACHE = 'duoduo-garden-v14';
 const ASSETS = [
   './',
   './index.html',
@@ -28,8 +28,11 @@ const ASSETS = [
   './assets/icon.svg',
   './assets/duoduo-garden-mascot.svg',
   './assets/icon-180.png',
+  './assets/icon-180-opaque.png',
   './assets/icon-192.png',
   './assets/icon-512.png',
+  './assets/icon-maskable-192.png',
+  './assets/icon-maskable-512.png',
   './assets/icon.ico',
   './docs/bouquet-preview.png',
   './docs/snowflake-preview.png',
